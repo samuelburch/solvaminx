@@ -1,6 +1,6 @@
-# shooter
+# solvaminx
 
-Designing a 3d first/third person shooter
+modeling and solving a megaminx
 
 dependencies: 
 minGW
