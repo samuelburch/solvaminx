@@ -1,6 +1,6 @@
 csrc = $(wildcard source/*.cpp)
 obj = $(csrc:.cpp=.o)
-EXECUTABLE = shooter
+EXECUTABLE = solvaminx
 UNAME := $(shell uname)
 CXXFLAGS = -std=c++17 #-std=c++0x
 ifeq ($(UNAME), MINGW32_NT-6.1)
