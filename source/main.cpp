@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace std;
@@ -29,6 +30,64 @@ using namespace glm;
 int num;
 
 vec3 colors[12] = {{1.0f, 0.5f, 0.2f}, {0.3f, 0.1f, 0.2f}, {0.7f, 0.0f, 0.9f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {0.5f, 0.5f, 0.5f}, {0.2f, 0.9f, 1.0f}, {0.9f, 0.1f, 1.0f}};
+
+vector<int> edgemap[12 * 5] = {
+	{9, 0}, {1, 3}, {5, 0}, {4, 1}, {8, 4}, // 0
+	{10, 0},
+	{2, 3},
+	{5, 1},
+	{0, 1},
+	{6, 4}, // 1
+	{6, 0},
+	{3, 3},
+	{5, 2},
+	{1, 1},
+	{10, 4}, // 2
+	{7, 0},
+	{4, 3},
+	{5, 3},
+	{2, 1},
+	{6, 4}, // 3
+	{8, 0},
+	{0, 3},
+	{5, 4},
+	{3, 1},
+	{7, 4}, // 4
+	{0, 2},
+	{1, 2},
+	{2, 2},
+	{3, 2},
+	{4, 2}, // 5
+	{2, 0},
+	{10, 3},
+	{11, 4},
+	{7, 1},
+	{3, 4}, // 6
+	{3, 0},
+	{6, 3},
+	{11, 3},
+	{8, 1},
+	{4, 4}, // 7
+	{4, 0},
+	{7, 3},
+	{11, 2},
+	{9, 1},
+	{0, 4}, // 8
+	{0, 0},
+	{8, 3},
+	{11, 1},
+	{10, 1},
+	{1, 4}, // 9
+	{1, 0},
+	{9, 3},
+	{11, 0},
+	{6, 1},
+	{2, 4}, // 10
+	{10, 2},
+	{9, 2},
+	{8, 2},
+	{7, 2},
+	{6, 2}}; // 11
 
 typedef struct tile
 {
@@ -58,8 +117,10 @@ typedef struct face
 {
 	vector<face *> adjacent;
 	vector<tile *> tiles;
+	int f;
 	face(vector<tile> &_tiles, int c)
 	{
+		f = c;
 		for (int i = 0; i < 11; i++)
 		{
 			tiles.push_back(&_tiles[c * 11 + i]);
@@ -82,35 +143,74 @@ typedef struct face
 
 	void setedge(int e, vector<int> c)
 	{
-		cout << "size: " << tiles.size();
-		switch (e)
-		{
-		case 0:
-			tiles[0]->icolor = c[0];
-			tiles[1]->icolor = c[1];
-			tiles[2]->icolor = c[2];
-			break;
-		case 1:
-			tiles[2]->icolor = c[0];
-			tiles[3]->icolor = c[1];
-			tiles[4]->icolor = c[2];
-			break;
-		case 2:
-			tiles[4]->icolor = c[0];
-			tiles[5]->icolor = c[1];
-			tiles[6]->icolor = c[2];
-			break;
-		case 3:
-			tiles[6]->icolor = c[0];
-			tiles[7]->icolor = c[1];
-			tiles[8]->icolor = c[2];
-			break;
-		case 4:
-			tiles[8]->icolor = c[0];
-			tiles[9]->icolor = c[1];
+
+		tiles[e * 2]->icolor = c[0];
+		tiles[e * 2 + 1]->icolor = c[1];
+		if (e == 4)
 			tiles[0]->icolor = c[2];
-			break;
-		}
+		else
+			tiles[e * 2 + 2]->icolor = c[2];
+		// switch (e)
+		// {
+		// case 0:
+		// 	tiles[0]->icolor = c[0];
+		// 	tiles[1]->icolor = c[1];
+		// 	tiles[2]->icolor = c[2];
+		// 	break;
+		// case 1:
+		// 	tiles[2]->icolor = c[0];
+		// 	tiles[3]->icolor = c[1];
+		// 	tiles[4]->icolor = c[2];
+		// 	break;
+		// case 2:
+		// 	tiles[4]->icolor = c[0];
+		// 	tiles[5]->icolor = c[1];
+		// 	tiles[6]->icolor = c[2];
+		// 	break;
+		// case 3:
+		// 	tiles[6]->icolor = c[0];
+		// 	tiles[7]->icolor = c[1];
+		// 	tiles[8]->icolor = c[2];
+		// 	break;
+		// case 4:
+		// 	tiles[8]->icolor = c[0];
+		// 	tiles[9]->icolor = c[1];
+		// 	tiles[0]->icolor = c[2];
+		// 	break;
+		// }
+	}
+
+	void cc()
+	{
+		vector<int> temp;
+		temp = getedge(0);
+		setedge(0, getedge(4));
+		setedge(1, getedge(0));
+		setedge(2, getedge(1));
+		setedge(3, getedge(2));
+		setedge(4, temp);
+
+		// temp = adjacent[0]->getedge(edgemap[f*5 + 0][1]);
+		// adjacent[0]-setedge(edgemap[f*5 + 0][1],adjacent->getedge)
+
+		// temp = adjacent[4]->getedge(edgemap[f * 5 + 4][1]);
+		// for (int i = 1; i < 5; i++)
+		// {
+		// 	int ae = edgemap[f * 4 + i][1];
+		// 	adjacent[i]->setedge(i,adjacent[i-1]->getedge(edgemap[f * 4 + i][1]));
+		// }
+		// adjacent[0]->setedge(edgemap[f*5+0][1], temp);
+
+		cout << "edg: " << edgemap[f * 5 + 0][1] << endl;
+		cout << "adj: " << adjacent[0]->f << endl;
+		cout << "edg2: " << edgemap[f * 5 + 4][1] << endl;
+		cout << "adj2: " << adjacent[4]->f << endl;
+
+		vector<int> temp2;
+
+		// temp2 = adjacent[4]->getedge(edgemap[f * 5 + 4][1]);
+
+		// adjacent[0]->setedge(edgemap[f * 5 + 3][1], temp2);
 	}
 
 	void connectfaces(face *face1, face *face2, face *face3, face *face4,
@@ -174,7 +274,6 @@ typedef struct megaminx
 
 	vector<GLfloat> exportcolorbuffer()
 	{
-		cout << "size: " << tiles.size();
 		for (auto &t : tiles)
 			t.exportcolorindices();
 		return color_buff;
@@ -214,7 +313,7 @@ int main(void)
 		cc++;
 		tiles.push_back(t);
 	}
-	cout << tiles[0].color.r;
+
 	megaminx m(tiles);
 
 	ifstream file2("../resources/models/megaminx.v");
@@ -243,8 +342,8 @@ int main(void)
 		}
 	}
 
-	for (auto f : vertex_buff)
-		cout << f << endl;
+	// for (auto f : vertex_buff)
+	// 	cout << f << endl;
 
 	cout << tiles.size() << endl;
 	// Initialise GLFW
@@ -332,7 +431,9 @@ int main(void)
 
 	vector<GLfloat> color_buff(vertex_buff.size());
 
-	m.faces[0].setedge(2, m.faces[5].getedge(0));
+	// m.faces[0].setedge(2, m.faces[5].getedge(0));
+
+	m.faces[0].cc();
 
 	color_buff = m.exportcolorbuffer();
 
@@ -358,6 +459,8 @@ int main(void)
 	int a = 0;
 	int b = 0;
 
+	int center = 0;
+
 	do
 	{
 		double currentTime = glfwGetTime();
@@ -368,6 +471,9 @@ int main(void)
 			nbFrames = 0;
 			lastTime += 1.0;
 		}
+
+		// m.faces[center].tiles[10]->icolor = rand() % 10;
+		// color_buff = m.exportcolorbuffer();
 
 		// for (int i = 0; i <
 		// sizeof(g_vertex_buffer_data) / 12
@@ -387,11 +493,16 @@ int main(void)
 		int newSpace = glfwGetKey(window, GLFW_KEY_SPACE);
 		if (newSpace == GLFW_RELEASE && oldSpace == GLFW_PRESS)
 		{
-			for (b = 0; b < 9; b++)
-			{
-				color_buff[a * 9 + b] = 0.0f;
-			}
-			a++;
+			
+			m.faces[0].adjacent[center]->setedge(0,{1,2,3});
+			color_buff = m.exportcolorbuffer();
+			center++;
+			// center++;
+			// for (b = 0; b < 9; b++)
+			// {
+			// 	color_buff[a * 9 + b] = 0.0f;
+			// }
+			// a++;
 		}
 		oldSpace = newSpace;
 
