@@ -243,13 +243,15 @@ typedef struct megaminx
 			}
 		}
 		color_buff = vector<GLfloat>(2160);
-		faces = {face(tiles, 0), face(tiles, 1), face(tiles, 2), face(tiles, 3),
-				 face(tiles, 4), face(tiles, 5), face(tiles, 6), face(tiles, 7),
-				 face(tiles, 8), face(tiles, 9), face(tiles, 10), face(tiles, 11)};
-		faces[0].connectfaces(&faces[9], &faces[1], &faces[5], &faces[4],
+		// faces = {face(tiles, 0), face(tiles, 1), face(tiles, 2), face(tiles, 3),
+		// 		 face(tiles, 4), face(tiles, 5), face(tiles, 6), face(tiles, 7),
+		// 		 face(tiles, 8), face(tiles, 9), face(tiles, 10), face(tiles, 11)};
+		for(int i = 0; i < 12; i++)
+		faces.push_back(face(tiles,i));
+		faces[0].connectfaces(&faces[7], &faces[1], &faces[5], &faces[4],
 							  &faces[8]);
-		faces[1].connectfaces(&faces[10], &faces[2], &faces[5], &faces[0],
-							  &faces[9]);
+		faces[1].connectfaces(&faces[6], &faces[2], &faces[5], &faces[0],
+							  &faces[7]);
 		faces[2].connectfaces(&faces[6], &faces[3], &faces[5], &faces[1],
 							  &faces[10]);
 		faces[3].connectfaces(&faces[7], &faces[4], &faces[5], &faces[2],
@@ -459,8 +461,8 @@ int main(void)
 	int a = 0;
 	int b = 0;
 
-	int center = 0;
-
+	int ca = -1;
+	int fa = 2;
 	do
 	{
 		double currentTime = glfwGetTime();
@@ -493,10 +495,19 @@ int main(void)
 		int newSpace = glfwGetKey(window, GLFW_KEY_SPACE);
 		if (newSpace == GLFW_RELEASE && oldSpace == GLFW_PRESS)
 		{
-			
-			m.faces[0].adjacent[center]->setedge(0,{1,2,3});
+			if (ca == 5)
+			{
+				fa++;
+				ca = 0;
+			}
+			else
+			{
+				ca++;
+			}
+
+			m.faces[fa].adjacent[ca]->setedge(edgemap[fa * 5 + ca][1], {rand() % 3, rand() % 3, rand() % 3});
 			color_buff = m.exportcolorbuffer();
-			center++;
+
 			// center++;
 			// for (b = 0; b < 9; b++)
 			// {
