@@ -29,67 +29,24 @@ using namespace glm;
 
 int num;
 
-vec3 colors[12] = {{1.0f, 0.5f, 0.2f}, {0.3f, 0.1f, 0.2f}, {0.7f, 0.0f, 0.9f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {0.5f, 0.5f, 0.5f}, {0.2f, 0.9f, 1.0f}, {0.9f, 0.1f, 1.0f}};
+vec3 colors[13] = {
+	{0.890, 0.050, 0.050}, {0.890, 0.396, 0.050}, {0.968, 0.858, 0.211}, {0.211, 0.968, 0.270}, {0.211, 0.254, 0.968}, {1, 1, 1}, {0.890, 0.050, 0.050}, {0.890, 0.396, 0.050}, {0.968, 0.858, 0.211}, {0.211, 0.968, 0.270}, {0.211, 0.254, 0.968}, {0, 0, 0}, {.5, .5, .5}};
 
-vector<int> edgemap[12 * 5] = {
-	{9, 0}, {1, 3}, {5, 0}, {4, 1}, {8, 4}, // 0
-	{10, 0},
-	{2, 3},
-	{5, 1},
-	{0, 1},
-	{6, 4}, // 1
-	{6, 0},
-	{3, 3},
-	{5, 2},
-	{1, 1},
-	{10, 4}, // 2
-	{7, 0},
-	{4, 3},
-	{5, 3},
-	{2, 1},
-	{6, 4}, // 3
-	{8, 0},
-	{0, 3},
-	{5, 4},
-	{3, 1},
-	{7, 4}, // 4
-	{0, 2},
-	{1, 2},
-	{2, 2},
-	{3, 2},
-	{4, 2}, // 5
-	{2, 0},
-	{10, 3},
-	{11, 4},
-	{7, 1},
-	{3, 4}, // 6
-	{3, 0},
-	{6, 3},
-	{11, 3},
-	{8, 1},
-	{4, 4}, // 7
-	{4, 0},
-	{7, 3},
-	{11, 2},
-	{9, 1},
-	{0, 4}, // 8
-	{0, 0},
-	{8, 3},
-	{11, 1},
-	{10, 1},
-	{1, 4}, // 9
-	{1, 0},
-	{9, 3},
-	{11, 0},
-	{6, 1},
-	{2, 4}, // 10
-	{10, 2},
-	{9, 2},
-	{8, 2},
-	{7, 2},
-	{6, 2}}; // 11
+int edgemap[12 * 5] = {
+	0, 1, 0, 3, 4,  // 0
+	0, 1, 1, 3, 4,  // 1
+	0, 1, 2, 3, 4,  // 2
+	0, 1, 3, 3, 4,  // 3
+	0, 1, 4, 3, 4,  // 4
+	2, 2, 2, 2, 2,  // 5
+	4, 3, 4, 1, 0,  // 6
+	4, 3, 3, 1, 0,  // 7
+	4, 3, 2, 1, 0,  // 8
+	4, 3, 1, 1, 0,  // 9
+	4, 3, 0, 1, 0,  // 10
+	2, 2, 2, 2, 2}; // 11
 
-typedef struct tile
+typedef struct tie
 {
 	vec3 color;
 	int icolor;
@@ -190,21 +147,13 @@ typedef struct face
 		setedge(3, getedge(2));
 		setedge(4, temp);
 
-		// temp = adjacent[0]->getedge(edgemap[f*5 + 0][1]);
-		// adjacent[0]-setedge(edgemap[f*5 + 0][1],adjacent->getedge)
-
-		// temp = adjacent[4]->getedge(edgemap[f * 5 + 4][1]);
-		// for (int i = 1; i < 5; i++)
-		// {
-		// 	int ae = edgemap[f * 4 + i][1];
-		// 	adjacent[i]->setedge(i,adjacent[i-1]->getedge(edgemap[f * 4 + i][1]));
-		// }
-		// adjacent[0]->setedge(edgemap[f*5+0][1], temp);
-
-		cout << "edg: " << edgemap[f * 5 + 0][1] << endl;
-		cout << "adj: " << adjacent[0]->f << endl;
-		cout << "edg2: " << edgemap[f * 5 + 4][1] << endl;
-		cout << "adj2: " << adjacent[4]->f << endl;
+		// temp = adjacent[0]->getedge(edgemap[f*5 + 0]);
+		// adjacent[0]->setedge(edgemap[f*5 + 0],adjacent->getedge);
+		temp = adjacent[0]->getedge(edgemap[f*5]);
+		for (int i = 3; i > 0; i--){
+			adjacent[i]->setedge(edgemap[f*5+i],adjacent[i-1]->getedge(edgemap[f*5 + i - 1]));
+		}
+		adjacent[4]->setedge(edgemap[f*5 + 4],temp);
 
 		vector<int> temp2;
 
@@ -221,6 +170,18 @@ typedef struct face
 		adjacent.push_back(face3);
 		adjacent.push_back(face4);
 		adjacent.push_back(face5);
+	}
+
+	void reset()
+	{
+		// for (auto &t : tiles)
+		// {
+		// 	t->icolor = f;
+		// }
+		for (int i = 0; i < 11; i++)
+		{
+			tiles[i]->icolor = f;
+		}
 	}
 
 } face;
@@ -245,30 +206,31 @@ typedef struct megaminx
 		color_buff = vector<GLfloat>(2160);
 		// faces = {face(tiles, 0), face(tiles, 1), face(tiles, 2), face(tiles, 3),
 		// 		 face(tiles, 4), face(tiles, 5), face(tiles, 6), face(tiles, 7),
-		// 		 face(tiles, 8), face(tiles, 9), face(tiles, 10), face(tiles, 11)};
-		for(int i = 0; i < 12; i++)
-		faces.push_back(face(tiles,i));
-		faces[0].connectfaces(&faces[7], &faces[1], &faces[5], &faces[4],
-							  &faces[8]);
-		faces[1].connectfaces(&faces[6], &faces[2], &faces[5], &faces[0],
+		// 		 face(tiles, 8), face(tiles, 9), face(tiles, 10), face(tiles,
+		// 11)};
+		for (int i = 0; i < 12; i++)
+			faces.push_back(face(tiles, i));
+		faces[0].connectfaces(&faces[8], &faces[4], &faces[5], &faces[1],
 							  &faces[7]);
-		faces[2].connectfaces(&faces[6], &faces[3], &faces[5], &faces[1],
-							  &faces[10]);
-		faces[3].connectfaces(&faces[7], &faces[4], &faces[5], &faces[2],
+		faces[1].connectfaces(&faces[7], &faces[0], &faces[5], &faces[2],
 							  &faces[6]);
-		faces[4].connectfaces(&faces[8], &faces[0], &faces[5], &faces[3],
-							  &faces[7]);
-		faces[5].connectfaces(&faces[0], &faces[1], &faces[2], &faces[3],
-							  &faces[4]);
-		faces[6].connectfaces(&faces[2], &faces[10], &faces[11], &faces[7],
-							  &faces[3]);
-		faces[7].connectfaces(&faces[3], &faces[6], &faces[11], &faces[8],
-							  &faces[4]);
-		faces[8].connectfaces(&faces[4], &faces[7], &faces[11], &faces[9],
+		faces[2].connectfaces(&faces[6], &faces[1], &faces[5], &faces[3],
+							  &faces[10]);
+		faces[3].connectfaces(&faces[10], &faces[2], &faces[5], &faces[4],
+							  &faces[9]);
+		faces[4].connectfaces(&faces[9], &faces[3], &faces[5], &faces[0],
+							  &faces[8]);
+		faces[5].connectfaces(&faces[4], &faces[3], &faces[2], &faces[1],
 							  &faces[0]);
-		faces[9].connectfaces(&faces[0], &faces[8], &faces[11], &faces[10],
+		faces[6].connectfaces(&faces[2], &faces[10], &faces[11], &faces[7],
 							  &faces[1]);
-		faces[10].connectfaces(&faces[1], &faces[9], &faces[11], &faces[6],
+		faces[7].connectfaces(&faces[1], &faces[6], &faces[11], &faces[8],
+							  &faces[0]);
+		faces[8].connectfaces(&faces[0], &faces[7], &faces[11], &faces[9],
+							  &faces[4]);
+		faces[9].connectfaces(&faces[4], &faces[8], &faces[11], &faces[10],
+							  &faces[3]);
+		faces[10].connectfaces(&faces[3], &faces[9], &faces[11], &faces[6],
 							   &faces[2]);
 		faces[11].connectfaces(&faces[10], &faces[9], &faces[8], &faces[7],
 							   &faces[6]);
@@ -279,6 +241,12 @@ typedef struct megaminx
 		for (auto &t : tiles)
 			t.exportcolorindices();
 		return color_buff;
+	}
+
+	void reset()
+	{
+		for (auto &f : faces)
+			f.reset();
 	}
 
 } megaminx;
@@ -435,7 +403,7 @@ int main(void)
 
 	// m.faces[0].setedge(2, m.faces[5].getedge(0));
 
-	m.faces[0].cc();
+	// m.faces[0].cc();
 
 	color_buff = m.exportcolorbuffer();
 
@@ -462,7 +430,7 @@ int main(void)
 	int b = 0;
 
 	int ca = -1;
-	int fa = 2;
+	int fa = 10;
 	do
 	{
 		double currentTime = glfwGetTime();
@@ -495,17 +463,21 @@ int main(void)
 		int newSpace = glfwGetKey(window, GLFW_KEY_SPACE);
 		if (newSpace == GLFW_RELEASE && oldSpace == GLFW_PRESS)
 		{
-			if (ca == 5)
-			{
-				fa++;
-				ca = 0;
-			}
-			else
-			{
-				ca++;
-			}
+			// if (ca == 4)
+			// {
+			// 	m.reset();
+			// 	fa++;
+			// 	ca = 0;
+			// }
+			// else
+			// {
+			// 	ca++;
+			// }
 
-			m.faces[fa].adjacent[ca]->setedge(edgemap[fa * 5 + ca][1], {rand() % 3, rand() % 3, rand() % 3});
+			// m.faces[fa].adjacent[ca]->setedge(edgemap[fa * 5 + ca], {12, 12, 12});
+			// color_buff = m.exportcolorbuffer();
+
+			m.faces[0].cc();
 			color_buff = m.exportcolorbuffer();
 
 			// center++;
@@ -521,18 +493,8 @@ int main(void)
 		int newAlt = glfwGetKey(window, GLFW_KEY_RIGHT_ALT);
 		if (newAlt == GLFW_RELEASE && oldAlt == GLFW_PRESS)
 		{
-			cout << "hey";
-			if (b == 3)
-			{
-				b = 0;
-				a++;
-			}
-			for (int c = 0; c < 3; c++)
-			{
-				color_buff[a * 9 + b * 3 + c] = 0.0f;
-			}
-
-			b++;
+			m.reset();
+			color_buff = m.exportcolorbuffer();
 		}
 		oldAlt = newAlt;
 
