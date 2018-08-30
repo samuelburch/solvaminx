@@ -299,7 +299,7 @@ int main(void)
 	glfwMakeContextCurrent(window);
 
 	//vsync
-	glfwSwapInterval(0);
+	glfwSwapInterval(1);
 
 	// Initialize GLEW
 	glewExperimental = true; // Needed for core profile
@@ -312,6 +312,7 @@ int main(void)
 	}
 
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f); // dark blue
 	glEnable(GL_DEPTH_TEST);
@@ -332,6 +333,7 @@ int main(void)
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 
 	vector<GLfloat> color_buff(vertex_buff.size());
+	vector<GLfloat> color_buff_black(vertex_buff.size(), 0);
 
 	color_buff = m.exportcolorbuffer();
 
@@ -353,6 +355,11 @@ int main(void)
 
 	double lastTime = glfwGetTime();
 	int nbFrames = 0;
+#if 0
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+#else
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
 
 	do
 	{
@@ -418,7 +425,15 @@ int main(void)
 		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
+		//TRIANGLES
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 		glDrawArrays(GL_TRIANGLES, 0, vertex_buff.size() / 3);
+
+		//WIRES
+		// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+		// glDrawArrays(GL_TRIANGLES, 0, vertex_buff.size() / 3);
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
