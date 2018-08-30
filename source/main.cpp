@@ -124,7 +124,8 @@ typedef struct face
 		temp = adjacent[4]->getedge(edgemap[f * 5 + 4]);
 
 		for (int z = 4; z > 0; z--)
-			adjacent[z]->setedge(edgemap[f * 5 + z], adjacent[z - 1]->getedge(edgemap[f * 5 + (z - 1)]));
+			adjacent[z]->setedge(edgemap[f * 5 + z],
+								 adjacent[z - 1]->getedge(edgemap[f * 5 + (z - 1)]));
 		adjacent[0]->setedge(edgemap[f * 5 + 0], temp);
 	}
 
@@ -244,7 +245,7 @@ int main(void)
 
 	megaminx m(tiles);
 
-	file.open("../resources/models/megaminx.v");
+	file.open("../resources/models/megaminx2.v");
 	lines = {};
 	line = "";
 	if (file.is_open())
@@ -297,6 +298,9 @@ int main(void)
 	}
 	glfwMakeContextCurrent(window);
 
+	//vsync
+	glfwSwapInterval(0);
+
 	// Initialize GLEW
 	glewExperimental = true; // Needed for core profile
 	if (glewInit() != GLEW_OK)
@@ -309,7 +313,7 @@ int main(void)
 
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-	glClearColor(0.0f, 0.0f, 0.4f, 0.0f); //dark blue
+	glClearColor(0.0f, 0.0f, 0.4f, 0.0f); // dark blue
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
@@ -428,7 +432,7 @@ int main(void)
 		glfwPollEvents();
 
 	} while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-		   glfwWindowShouldClose(window) == 0);
+			 glfwWindowShouldClose(window) == 0);
 
 	glDeleteBuffers(1, &vertexbuffer);
 	glDeleteBuffers(1, &colorbuffer);
