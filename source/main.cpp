@@ -32,28 +32,27 @@ int num;
 vec3 colors[13] = {
 	{0.890, 0.050, 0.050}, {0.890, 0.396, 0.050}, {0.968, 0.858, 0.211}, {0.211, 0.968, 0.270}, {0.211, 0.254, 0.968}, {1, 1, 1}, {0.890, 0.050, 0.050}, {0.890, 0.396, 0.050}, {0.968, 0.858, 0.211}, {0.211, 0.968, 0.270}, {0.211, 0.254, 0.968}, {0, 0, 0}, {.5, .5, .5}};
 
-int edgemap[12 * 5] = {
-	0, 1, 0, 3, 4,  // 0
-	0, 1, 1, 3, 4,  // 1
-	0, 1, 2, 3, 4,  // 2
-	0, 1, 3, 3, 4,  // 3
-	0, 1, 4, 3, 4,  // 4
-	2, 2, 2, 2, 2,  // 5
-	4, 3, 4, 1, 0,  // 6
-	4, 3, 3, 1, 0,  // 7
-	4, 3, 2, 1, 0,  // 8
-	4, 3, 1, 1, 0,  // 9
-	4, 3, 0, 1, 0,  // 10
-	2, 2, 2, 2, 2}; // 11
+static const int edgemap[12 * 5] = {0, 1, 0, 3, 4,  // 0
+									0, 1, 1, 3, 4,  // 1
+									0, 1, 2, 3, 4,  // 2
+									0, 1, 3, 3, 4,  // 3
+									0, 1, 4, 3, 4,  // 4
+									2, 2, 2, 2, 2,  // 5
+									4, 3, 4, 1, 0,  // 6
+									4, 3, 3, 1, 0,  // 7
+									4, 3, 2, 1, 0,  // 8
+									4, 3, 1, 1, 0,  // 9
+									4, 3, 0, 1, 0,  // 10
+									2, 2, 2, 2, 2}; // 11
 
-typedef struct tie
+typedef struct tile
 {
 	vec3 color;
 	int icolor;
 	vector<int> color_indices;
 	vector<GLfloat> *color_buff;
 	tile(){};
-	vector<GLfloat> exportcolorindices()
+	void exportcolorindices()
 	{
 		color = colors[icolor];
 		for (auto &i : color_indices)
@@ -141,21 +140,53 @@ typedef struct face
 	{
 		vector<int> temp;
 		temp = getedge(0);
-		setedge(0, getedge(4));
-		setedge(1, getedge(0));
-		setedge(2, getedge(1));
-		setedge(3, getedge(2));
+		setedge(0, getedge(1));
+		setedge(1, getedge(2));
+		setedge(2, getedge(3));
+		setedge(3, getedge(4));
 		setedge(4, temp);
+
+		temp = adjacent[4]->getedge(edgemap[f * 5 + 4]);
+		// adjacent[4]->setedge(edgemap[f * 5 + 4], adjacent[3]->getedge(edgemap[f *
+		// 5 + 3])); adjacent[3]->setedge(edgemap[f * 5 + 3],
+		// adjacent[2]->getedge(edgemap[f * 5 + 2])); adjacent[2]->setedge(edgemap[f
+		// * 5 + 2], adjacent[1]->getedge(edgemap[f * 5 + 1]));
+		// adjacent[1]->setedge(edgemap[f * 5 + 1], adjacent[0]->getedge(edgemap[f *
+		// 5 + 0]));
+		int z = 4;
+		adjacent[z]->setedge(edgemap[f * 5 + z],
+							 adjacent[z - 1]->getedge(edgemap[f * 5 + (z - 1)]));
+		z = 3;
+		adjacent[z]->setedge(edgemap[f * 5 + z],
+							 adjacent[z - 1]->getedge(edgemap[f * 5 + (z - 1)]));
+		z = 2;
+		adjacent[z]->setedge(edgemap[f * 5 + z],
+							 adjacent[z - 1]->getedge(edgemap[f * 5 + (z - 1)]));
+		z = 1;
+		adjacent[z]->setedge(edgemap[f * 5 + z],
+							 adjacent[z - 1]->getedge(edgemap[f * 5 + (z - 1)]));
+
+		// adjacent[4]->setedge(edgemap[f * 5 + 4], adjacent[4 -
+		// 1]->getedge(edgemap[f * 5 + (4 - 1)])); adjacent[3]->setedge(edgemap[f *
+		// 5 + 3], adjacent[3 - 1]->getedge(edgemap[f * 5 + (3 - 1)]));
+		// adjacent[2]->setedge(edgemap[f * 5 + 2], adjacent[2 -
+		// 1]->getedge(edgemap[f * 5 + (2 - 1)])); adjacent[1]->setedge(edgemap[f *
+		// 5 + 1], adjacent[1 - 1]->getedge(edgemap[f * 5 + (1 - 1)]));
+
+		adjacent[0]->setedge(edgemap[f * 5 + 0], temp);
 
 		// temp = adjacent[0]->getedge(edgemap[f*5 + 0]);
 		// adjacent[0]->setedge(edgemap[f*5 + 0],adjacent->getedge);
-		temp = adjacent[0]->getedge(edgemap[f*5]);
-		for (int i = 3; i > 0; i--){
-			adjacent[i]->setedge(edgemap[f*5+i],adjacent[i-1]->getedge(edgemap[f*5 + i - 1]));
-		}
-		adjacent[4]->setedge(edgemap[f*5 + 4],temp);
-
-		vector<int> temp2;
+		// vector<int> temp2;
+		// temp2 = adjacent[4]->getedge(edgemap[f * 5 + 4]);
+		// for (int i = 4; i > 1; i--)
+		// {
+		// 	adjacent[i]->setedge(edgemap[f * 5 + i], adjacent[i -
+		// 1]->getedge(edgemap[f * 5 + i - 1]));
+		// }
+		// for (auto t : temp2)
+		// 	cout << t;
+		// adjacent[0]->setedge(edgemap[f*5 + 4], temp2);
 
 		// temp2 = adjacent[4]->getedge(edgemap[f * 5 + 4][1]);
 
@@ -275,7 +306,7 @@ int main(void)
 		stringstream ss(l);
 		tile t;
 		int a;
-		for (int i = 0; ss >> a;)
+		for (; ss >> a;)
 		{
 			t.color_indices.push_back(a);
 			t.color = colors[cc];
@@ -306,7 +337,7 @@ int main(void)
 	{
 		stringstream ss(l);
 		float f;
-		for (int i = 0; ss >> f;)
+		for (; ss >> f;)
 		{
 			vertex_buff.push_back(f);
 		}
@@ -380,21 +411,23 @@ int main(void)
 
 	// Get a handle for our "MVP" uniform
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
-	glm::mat4 Projection =
-		glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
-	// Camera matrix
-	glm::mat4 View = glm::lookAt(glm::vec3(0, 0,
-										   0), // Camera is at (4,3,-3), in
-											   // World Space
-								 glm::vec3(0, 0,
-										   0), // and looks at the origin
-								 glm::vec3(0, 1,
-										   0) // Head is up (set to 0,-1,0 to
-											  // look upside-down)
-	);
-	glm::mat4 Model = glm::mat4(1.0f);
-	glm::mat4 MVP = Projection * View * Model; // Remember, matrix multiplication
-											   // is the other way around
+	// glm::mat4 Projection =
+	// 	glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
+	// // Camera matrix
+	// glm::mat4 View = glm::lookAt(glm::vec3(0, 0,
+	// 									   0), // Camera is at (4,3,-3),
+	// in
+	// 										   // World
+	// Space 							 glm::vec3(0, 0, 									   0), // and looks at the origin 							 glm::vec3(0, 1, 									   0) //
+	// Head is up (set to 0,-1,0 to
+	// 										  // look
+	// upside-down)
+	// );
+	// glm::mat4 Model = glm::mat4(1.0f);
+	// glm::mat4 MVP = Projection * View * Model; // Remember, matrix
+	// multiplication
+	// 										   // is the other way
+	// around
 
 	// One color for each vertex. They were
 	// generated randomly.
@@ -426,11 +459,13 @@ int main(void)
 	double lastTime = glfwGetTime();
 	int nbFrames = 0;
 
-	int a = 0;
-	int b = 0;
+	// int a = 0;
+	// int b = 0;
 
-	int ca = -1;
-	int fa = 10;
+	m.faces[1].cc();
+
+	// int ca = -1;
+	// int fa = 10;
 	do
 	{
 		double currentTime = glfwGetTime();
@@ -440,6 +475,8 @@ int main(void)
 			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
 			nbFrames = 0;
 			lastTime += 1.0;
+			// m.faces[rand() % 12].cc();
+			// color_buff = m.exportcolorbuffer();
 		}
 
 		// m.faces[center].tiles[10]->icolor = rand() % 10;
@@ -459,26 +496,30 @@ int main(void)
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
 
+		bool swap;
+
 		static int oldSpace = GLFW_RELEASE;
 		int newSpace = glfwGetKey(window, GLFW_KEY_SPACE);
 		if (newSpace == GLFW_RELEASE && oldSpace == GLFW_PRESS)
 		{
-			// if (ca == 4)
-			// {
-			// 	m.reset();
-			// 	fa++;
-			// 	ca = 0;
-			// }
+			// if (swap)
+			// 	m.faces[0].cc();
 			// else
-			// {
-			// 	ca++;
-			// }
+			// 	m.faces[1].cc();
+			// swap = !swap;
+			
+			m.faces[0].cc();
 
+			color_buff = m.exportcolorbuffer();
 			// m.faces[fa].adjacent[ca]->setedge(edgemap[fa * 5 + ca], {12, 12, 12});
 			// color_buff = m.exportcolorbuffer();
 
-			m.faces[0].cc();
-			color_buff = m.exportcolorbuffer();
+			// m.faces[0].cc();
+			// color_buff = m.exportcolorbuffer();
+
+			//   for (int i = 0; i < 1000; i++)
+			//     m.faces[rand() % 12].cc();
+			//   color_buff = m.exportcolorbuffer();
 
 			// center++;
 			// for (b = 0; b < 9; b++)
@@ -538,10 +579,10 @@ int main(void)
 		char text[256];
 		sprintf(text, "%.2f sec", glfwGetTime());
 		printText2D(text, 10, 500, 60);
-		sprintf(text, "triangle %i", a);
-		printText2D(text, 10, 300, 40);
-		sprintf(text, "vertex %i", a * 3 + b);
-		printText2D(text, 10, 200, 40);
+		// sprintf(text, "triangle %i", a);
+		// printText2D(text, 10, 300, 40);
+		// sprintf(text, "vertex %i", a * 3 + b);
+		// printText2D(text, 10, 200, 40);
 
 		// Swap buffers
 		glfwSwapBuffers(window);

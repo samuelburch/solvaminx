@@ -2,7 +2,7 @@ csrc = $(wildcard source/*.cpp)
 obj = $(csrc:.cpp=.o)
 EXECUTABLE = solvaminx
 UNAME := $(shell uname)
-CXXFLAGS = -std=c++17 #-std=c++0x
+CXXFLAGS = -std=c++17 -Wall #-std=c++0x
 ifeq ($(UNAME), MINGW32_NT-6.1)
 LDFLAGS = -lglfw3 -lopengl32 -lgdi32 -lglew32
 else
