@@ -355,6 +355,11 @@ int main(void)
 
 	double lastTime = glfwGetTime();
 	int nbFrames = 0;
+
+	int currentface;
+
+	vec3 camerapos;
+
 #if 0
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 #else
@@ -405,7 +410,7 @@ int main(void)
 
 		// Compute the MVP matrix from keyboard and
 		// mouse input
-		computeMatricesFromInputs();
+		computeMatricesFromInputs(&currentface, &camerapos);
 		glm::mat4 ProjectionMatrix = getProjectionMatrix();
 		glm::mat4 ViewMatrix = getViewMatrix();
 		glm::mat4 ModelMatrix = glm::mat4(1.0);
@@ -441,6 +446,14 @@ int main(void)
 		char text[256];
 		sprintf(text, "%.2f sec", glfwGetTime());
 		printText2D(text, 10, 500, 60);
+		sprintf(text, "Current face: %i", currentface);
+		printText2D(text, 10, 440, 30);
+		sprintf(text, "x: %f", camerapos.x);
+		printText2D(text, 10, 410, 30);
+		sprintf(text, "y: %f", camerapos.y);
+		printText2D(text, 10, 380, 30);
+		sprintf(text, "z: %f", camerapos.z);
+		printText2D(text, 10, 350, 30);
 
 		// Swap buffers
 		glfwSwapBuffers(window);

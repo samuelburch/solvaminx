@@ -30,15 +30,15 @@ float initialFoV = 30.0f;
 float speed = 3.0f; // 3 units / second
 float mouseSpeed = 0.002f;
 
-void computeMatricesFromInputs()
+void computeMatricesFromInputs(int *currentface, vec3 *camerapos)
 {
 
 	// glfwGetTime is called only once, the first time this function is called
-	static double lastTime = glfwGetTime();
+	// static double lastTime = glfwGetTime();
 
 	// Compute time difference between current and last frame
-	double currentTime = glfwGetTime();
-	float deltaTime = float(currentTime - lastTime);
+	// double currentTime = glfwGetTime();
+	// float deltaTime = float(currentTime - lastTime);
 
 	// Get mouse position
 	double xpos, ypos;
@@ -73,15 +73,62 @@ void computeMatricesFromInputs()
 
 	float distance = 10; // Straight line distance between the camera and look at point
 
+	float xangle = cos(verticalAngle) * sin(horizontalAngle);
+	float yangle = sin(verticalAngle);
+	float zangle = cos(verticalAngle) * cos(horizontalAngle);
+
+	float hangle = mod(horizontalAngle / 6.28f, 1.0f) * 360;
+	float vangle = sin(verticalAngle);
+
 	// Calculate the camera position using the distance and angles
-	float camX = 0.0001465 + distance * cos(verticalAngle) * sin(horizontalAngle);
-	float camY = 1.25846 + distance * sin(verticalAngle);
-	float camZ = 0.0004519 + distance * cos(verticalAngle) * cos(horizontalAngle);
+	float camX = 0.0001465 + distance * xangle;
+	float camY = 1.25846 + distance * yangle;
+	float camZ = 0.0004519 + distance * zangle;
+
+	*camerapos = {hangle, vangle, zangle};
+
+	if (vangle < 0)
+	{
+		if (vangle > -.72)
+		{
+			*currentface = 1;
+			if (hangle > 72)
+				*currentface = 2;
+			if (hangle > 72 * 2)
+				*currentface = 3;
+			if (hangle > 72 * 3)
+				*currentface = 4;
+			if (hangle > 72 * 4)
+				*currentface = 0;
+		}
+		else
+			*currentface = 5;
+	}
+	else
+	{
+		if (vangle < .72)
+		{
+			hangle += 36;
+			*currentface = 8;
+			if (hangle > 72)
+				*currentface = 9;
+			if (hangle > 72 * 2)
+				*currentface = 10;
+			if (hangle > 72 * 3)
+				*currentface = 6;
+			if (hangle > 72 * 4)
+				*currentface = 7;
+				if(hangle > 72 * 5)
+				*currentface = 8;
+		}
+		else
+			*currentface = 11;
+	}
 
 	// Set the camera position and lookat point
 	ViewMatrix = glm::lookAt({camX, camY, camZ},			  // Camera position
 							 {0.0001465, 1.25846, 0.0004519}, // Look at point
 							 up);							  // Up vector
 
-	lastTime = currentTime;
+	// lastTime = currentTime;
 }

@@ -17,6 +17,7 @@
 		"utility": "cpp",
 		"memory": "cpp",
 		"ostream": "cpp",
-		"cmath": "cpp"
+		"cmath": "cpp",
+		"xlocale": "cpp"
 	},
 }
