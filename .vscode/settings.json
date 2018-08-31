@@ -18,6 +18,17 @@
 		"memory": "cpp",
 		"ostream": "cpp",
 		"cmath": "cpp",
-		"xlocale": "cpp"
+		"xlocale": "cpp",
+		"istream": "cpp",
+		"string": "cpp",
+		"exception": "cpp",
+		"functional": "cpp",
+		"ios": "cpp",
+		"map": "cpp",
+		"sstream": "cpp",
+		"streambuf": "cpp",
+		"tuple": "cpp",
+		"unordered_map": "cpp",
+		"xiosbase": "cpp"
 	},
 }

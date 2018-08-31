@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -47,6 +48,9 @@ const int edgemap[12 * 5] = {0, 1, 0, 3, 4,  // 0
 							 4, 3, 1, 1, 0,  // 9
 							 4, 3, 0, 1, 0,  // 10
 							 2, 2, 2, 2, 2}; // 11
+
+void key_callback(GLFWwindow *window, int key, int scancode, int action,
+				  int mods);
 
 typedef struct tile
 {
@@ -117,7 +121,17 @@ typedef struct face
 			tiles[e * 2 + 2]->icolor = c[2];
 	}
 
-	void cc()
+	bool solved()
+	{
+		for (int i = 0; i < 11; i++)
+		{
+			if (tiles[i]->icolor != f)
+				return false;
+		}
+		return true;
+	}
+
+	void cw()
 	{
 		vector<int> temp;
 		if (f < 6)
@@ -144,12 +158,49 @@ typedef struct face
 		bool flip;
 		for (int z = 4; z > 0; z--)
 		{
-			flip = (adjacent[z]->f < 6 != adjacent[z - 1]->f < 6);
+			flip = ((adjacent[z]->f < 6) != (adjacent[z - 1]->f < 6));
 			adjacent[z]->setedge(edgemap[f * 5 + z],
-								 adjacent[z - 1]->getedge(edgemap[f * 5 + (z - 1)]), flip);
+								 adjacent[z - 1]->getedge(edgemap[f * 5 + (z - 1)]),
+								 flip);
 		}
-		flip = (adjacent[4]->f < 6 != adjacent[0]->f < 6);
+		flip = ((adjacent[4]->f < 6) != (adjacent[0]->f < 6));
 		adjacent[0]->setedge(edgemap[f * 5 + 0], temp, flip);
+	}
+
+	void ccw()
+	{
+		vector<int> temp;
+		if (f < 6)
+		{
+			temp = getedge(4);
+			setedge(4, getedge(3), 0);
+			setedge(3, getedge(2), 0);
+			setedge(2, getedge(1), 0);
+			setedge(1, getedge(0), 0);
+			setedge(0, temp, 0);
+		}
+		else
+		{
+			temp = getedge(0);
+			setedge(0, getedge(1), 0);
+			setedge(1, getedge(2), 0);
+			setedge(2, getedge(3), 0);
+			setedge(3, getedge(4), 0);
+			setedge(4, temp, 0);
+		}
+
+		temp = adjacent[0]->getedge(edgemap[f * 5 + 0]);
+
+		bool flip;
+		for (int z = 0; z < 4; z++)
+		{
+			flip = ((adjacent[z]->f < 6) != (adjacent[z + 1]->f < 6));
+			adjacent[z]->setedge(edgemap[f * 5 + z],
+								 adjacent[z + 1]->getedge(edgemap[f * 5 + (z + 1)]),
+								 flip);
+		}
+		flip = ((adjacent[0]->f < 6) != (adjacent[4]->f < 6));
+		adjacent[4]->setedge(edgemap[f * 5 + 4], temp, flip);
 	}
 
 	void connectfaces(face *face1, face *face2, face *face3, face *face4,
@@ -177,6 +228,7 @@ typedef struct megaminx
 	vector<face> faces;
 	vector<tile> tiles;
 	vector<GLfloat> color_buff;
+	int currentface;
 	megaminx(vector<tile> _tiles)
 	{
 		tiles = _tiles;
@@ -218,11 +270,20 @@ typedef struct megaminx
 							   &faces[6]);
 	}
 
-	vector<GLfloat> exportcolorbuffer()
+	void exportcolorbuffer()
 	{
 		for (auto &t : tiles)
 			t.exportcolorindices();
-		return color_buff;
+	}
+
+	bool solved()
+	{
+		for (auto f : faces)
+		{
+			if (!f.solved())
+				return false;
+		}
+		return true;
 	}
 
 	void reset()
@@ -231,11 +292,20 @@ typedef struct megaminx
 			f.reset();
 	}
 
+	void rotate(bool clockwise)
+	{
+		if (clockwise)
+			faces[currentface].cw();
+		else
+			faces[currentface].ccw();
+	}
+
 } megaminx;
+
+megaminx *mp;
 
 int main(void)
 {
-
 	string line;
 	ifstream file("../resources/models/tiles.dat");
 	vector<string> lines;
@@ -265,8 +335,8 @@ int main(void)
 		cc++;
 		tiles.push_back(t);
 	}
-
 	megaminx m(tiles);
+	mp = &m;
 
 	file.open("../resources/models/megaminx2.v");
 	lines = {};
@@ -321,8 +391,10 @@ int main(void)
 	}
 	glfwMakeContextCurrent(window);
 
-	//vsync
-	glfwSwapInterval(1);
+	glfwSetKeyCallback(window, key_callback);
+
+	// vsync
+	glfwSwapInterval(0);
 
 	// Initialize GLEW
 	glewExperimental = true; // Needed for core profile
@@ -358,7 +430,7 @@ int main(void)
 	vector<GLfloat> color_buff(vertex_buff.size());
 	vector<GLfloat> color_buff_black(vertex_buff.size(), 0);
 
-	color_buff = m.exportcolorbuffer();
+	m.exportcolorbuffer();
 
 	GLuint vertexbuffer;
 	glGenBuffers(1, &vertexbuffer);
@@ -378,8 +450,7 @@ int main(void)
 
 	double lastTime = glfwGetTime();
 	int nbFrames = 0;
-
-	int currentface;
+	int fps = 0;
 
 	vec3 camerapos;
 
@@ -392,10 +463,12 @@ int main(void)
 	do
 	{
 		double currentTime = glfwGetTime();
+
 		nbFrames++;
 		if (currentTime - lastTime >= 1.0)
 		{
 			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+			fps = nbFrames;
 			nbFrames = 0;
 			lastTime += 1.0;
 		}
@@ -403,26 +476,9 @@ int main(void)
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
 
-		static int oldSpace = GLFW_RELEASE;
-		int newSpace = glfwGetKey(window, GLFW_KEY_SPACE);
-		if (newSpace == GLFW_RELEASE && oldSpace == GLFW_PRESS)
-		{
-			m.faces[currentface].cc();
-			color_buff = m.exportcolorbuffer();
-		}
-		oldSpace = newSpace;
 
-		static int oldAlt = GLFW_RELEASE;
-		int newAlt = glfwGetKey(window, GLFW_KEY_RIGHT_ALT);
-		if (newAlt == GLFW_RELEASE && oldAlt == GLFW_PRESS)
-		{
-			m.reset();
-			color_buff = m.exportcolorbuffer();
-		}
-		oldAlt = newAlt;
-
-		glBufferData(GL_ARRAY_BUFFER, color_buff.size() * sizeof(GLfloat),
-					 &color_buff[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, m.color_buff.size() * sizeof(GLfloat),
+					 &m.color_buff[0], GL_STATIC_DRAW);
 
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -432,7 +488,7 @@ int main(void)
 
 		// Compute the MVP matrix from keyboard and
 		// mouse input
-		computeMatricesFromInputs(&currentface, &camerapos);
+		computeMatricesFromInputs(&m.currentface, &camerapos);
 		glm::mat4 ProjectionMatrix = getProjectionMatrix();
 		glm::mat4 ViewMatrix = getViewMatrix();
 		glm::mat4 ModelMatrix = glm::mat4(1.0);
@@ -452,12 +508,12 @@ int main(void)
 		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
-		//TRIANGLES
+		// TRIANGLES
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 		glDrawArrays(GL_TRIANGLES, 0, vertex_buff.size() / 3);
 
-		//WIRES
+		// WIRES
 		// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 		// glDrawArrays(GL_TRIANGLES, 0, vertex_buff.size() / 3);
@@ -466,14 +522,16 @@ int main(void)
 		glDisableVertexAttribArray(1);
 
 		char text[256];
-		sprintf(text, "%.2f sec", glfwGetTime());
+		sprintf(text, "%.2f sec   fps: %i", glfwGetTime(), fps);
 		printText2D(text, 10, 575, 30);
-		sprintf(text, "Current face: %i", currentface);
-		printText2D(text, 10, 545, 20);
+		sprintf(text, "Current face: %i", m.currentface);
+		printText2D(text, 10, 555, 20);
 		sprintf(text, "horizontal angle: %f", camerapos.x);
-		printText2D(text, 10, 515, 20);
+		printText2D(text, 10, 535, 20);
 		sprintf(text, "vertical angle: %f", camerapos.y);
-		printText2D(text, 10, 485, 20);
+		printText2D(text, 10, 515, 20);
+		sprintf(text, "solved status: %s", m.solved() ? "true" : "false");
+		printText2D(text, 10, 495, 20);
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -492,4 +550,25 @@ int main(void)
 	glfwTerminate();
 
 	return 0;
+}
+
+void key_callback(GLFWwindow *window, int key, int scancode, int action,
+				  int mods)
+{
+	if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+	{
+		mp->rotate(0);
+		mp->exportcolorbuffer();
+	}
+	if (key == GLFW_KEY_E && action == GLFW_PRESS)
+	{
+		mp->rotate(1);
+		mp->exportcolorbuffer();
+	}
+
+	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+	{
+		mp->reset();
+		mp->exportcolorbuffer();
+	}
 }
