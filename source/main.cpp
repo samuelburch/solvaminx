@@ -100,8 +100,14 @@ typedef struct face
 		return temp;
 	}
 
-	void setedge(int e, vector<int> c)
+	void setedge(int e, vector<int> c, bool flip)
 	{
+		if (flip)
+		{
+			int temp = c[0];
+			c[0] = c[2];
+			c[2] = temp;
+		}
 
 		tiles[e * 2]->icolor = c[0];
 		tiles[e * 2 + 1]->icolor = c[1];
@@ -114,19 +120,36 @@ typedef struct face
 	void cc()
 	{
 		vector<int> temp;
-		temp = getedge(0);
-		setedge(0, getedge(1));
-		setedge(1, getedge(2));
-		setedge(2, getedge(3));
-		setedge(3, getedge(4));
-		setedge(4, temp);
+		if (f < 6)
+		{
+			temp = getedge(0);
+			setedge(0, getedge(1), 0);
+			setedge(1, getedge(2), 0);
+			setedge(2, getedge(3), 0);
+			setedge(3, getedge(4), 0);
+			setedge(4, temp, 0);
+		}
+		else
+		{
+			temp = getedge(4);
+			setedge(4, getedge(3), 0);
+			setedge(3, getedge(2), 0);
+			setedge(2, getedge(1), 0);
+			setedge(1, getedge(0), 0);
+			setedge(0, temp, 0);
+		}
 
 		temp = adjacent[4]->getedge(edgemap[f * 5 + 4]);
 
+		bool flip;
 		for (int z = 4; z > 0; z--)
+		{
+			flip = (adjacent[z]->f < 6 != adjacent[z - 1]->f < 6);
 			adjacent[z]->setedge(edgemap[f * 5 + z],
-								 adjacent[z - 1]->getedge(edgemap[f * 5 + (z - 1)]));
-		adjacent[0]->setedge(edgemap[f * 5 + 0], temp);
+								 adjacent[z - 1]->getedge(edgemap[f * 5 + (z - 1)]), flip);
+		}
+		flip = (adjacent[4]->f < 6 != adjacent[0]->f < 6);
+		adjacent[0]->setedge(edgemap[f * 5 + 0], temp, flip);
 	}
 
 	void connectfaces(face *face1, face *face2, face *face3, face *face4,
@@ -384,8 +407,7 @@ int main(void)
 		int newSpace = glfwGetKey(window, GLFW_KEY_SPACE);
 		if (newSpace == GLFW_RELEASE && oldSpace == GLFW_PRESS)
 		{
-			for (int i = 0; i < 1000; i++)
-				m.faces[rand() % 12].cc();
+			m.faces[currentface].cc();
 			color_buff = m.exportcolorbuffer();
 		}
 		oldSpace = newSpace;
@@ -445,15 +467,13 @@ int main(void)
 
 		char text[256];
 		sprintf(text, "%.2f sec", glfwGetTime());
-		printText2D(text, 10, 500, 60);
+		printText2D(text, 10, 575, 30);
 		sprintf(text, "Current face: %i", currentface);
-		printText2D(text, 10, 440, 30);
-		sprintf(text, "x: %f", camerapos.x);
-		printText2D(text, 10, 410, 30);
-		sprintf(text, "y: %f", camerapos.y);
-		printText2D(text, 10, 380, 30);
-		sprintf(text, "z: %f", camerapos.z);
-		printText2D(text, 10, 350, 30);
+		printText2D(text, 10, 545, 20);
+		sprintf(text, "horizontal angle: %f", camerapos.x);
+		printText2D(text, 10, 515, 20);
+		sprintf(text, "vertical angle: %f", camerapos.y);
+		printText2D(text, 10, 485, 20);
 
 		// Swap buffers
 		glfwSwapBuffers(window);

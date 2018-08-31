@@ -2,8 +2,8 @@
 #include <GLFW/glfw3.h>
 extern GLFWwindow
 	*window; // The "extern" keyword here is to access the variable "window"
-			 // declared in tutorialXXX.cpp. This is a hack to keep the
-			 // tutorials simple. Please avoid this.
+	// declared in tutorialXXX.cpp. This is a hack to keep the
+	// tutorials simple. Please avoid this.
 
 // Include GLM
 #include <glm/glm.hpp>
@@ -51,6 +51,11 @@ void computeMatricesFromInputs(int *currentface, vec3 *camerapos)
 	horizontalAngle += mouseSpeed * float(1024 / 2 - xpos);
 	verticalAngle -= mouseSpeed * float(768 / 2 - ypos);
 
+	if (verticalAngle > 1.57)
+		verticalAngle = 1.57;
+	if (verticalAngle < -1.57)
+		verticalAngle = -1.57;
+
 	// Direction : Spherical coordinates to Cartesian coordinates conversion
 	glm::vec3 direction(cos(verticalAngle) * sin(horizontalAngle),
 						sin(verticalAngle),
@@ -85,19 +90,19 @@ void computeMatricesFromInputs(int *currentface, vec3 *camerapos)
 	float camY = 1.25846 + distance * yangle;
 	float camZ = 0.0004519 + distance * zangle;
 
-	*camerapos = {hangle, vangle, zangle};
+	*camerapos = {verticalAngle, vangle, zangle};
 
 	if (vangle < 0)
 	{
 		if (vangle > -.72)
 		{
-			*currentface = 1;
+			*currentface = 4;
 			if (hangle > 72)
-				*currentface = 2;
-			if (hangle > 72 * 2)
 				*currentface = 3;
+			if (hangle > 72 * 2)
+				*currentface = 2;
 			if (hangle > 72 * 3)
-				*currentface = 4;
+				*currentface = 1;
 			if (hangle > 72 * 4)
 				*currentface = 0;
 		}
@@ -118,7 +123,7 @@ void computeMatricesFromInputs(int *currentface, vec3 *camerapos)
 				*currentface = 6;
 			if (hangle > 72 * 4)
 				*currentface = 7;
-				if(hangle > 72 * 5)
+			if (hangle > 72 * 5)
 				*currentface = 8;
 		}
 		else
